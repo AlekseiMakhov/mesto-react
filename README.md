@@ -1,6 +1,6 @@
 # Проект: Место (REACT)
 
-* [Ссылка на сайт на github pages](https://alekseimakhov.github.io/mesto-react/public/index.html)
+* [Ссылка на сайт на github pages](https://alekseimakhov.github.io/mesto-react/)
 
 ### Функционал
 
