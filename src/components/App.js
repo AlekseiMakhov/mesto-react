@@ -63,6 +63,7 @@ function App() {
                 }
                 isOpen={isEditAvatarPopupOpen}
                 onClose={closeAllPopups}
+                buttonText='Сохранить'
             />
             <PopupWithForm 
                 name='profile' 
@@ -77,6 +78,7 @@ function App() {
                     }
                     isOpen={isEditProfilePopupOpen}
                     onClose={closeAllPopups}
+                    buttonText='Сохранить'
             />
             <PopupWithForm 
                 name='place' 
@@ -91,6 +93,7 @@ function App() {
                 }
                 isOpen={isAddPlacePopupOpen}
                 onClose={closeAllPopups}
+                buttonText='Создать'
             />
             
             {/* <PopupWithForm name='image' title='Вы уверены?' /> */}

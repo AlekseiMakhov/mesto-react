@@ -8,7 +8,7 @@ function PopupWithForm(props) {
                     <button type="button" name="Закрыть" className="popup-form__close-button" onClick={props.onClose}></button>
                     <h3 className="popup-form__title">{props.title}</h3>
                     {props.children}
-                    <button name="Сохранить" className="popup-form__submit-button popup-form__submit-button_disabled" disabled>Сохранить</button>
+                    <button className="popup-form__submit-button popup-form__submit-button_disabled" disabled>{props.buttonText}</button>
                 </form>
             </section>            
         </>
