@@ -62,19 +62,13 @@ class Api {
         })
     }
     //ставим лайк
-    setLike(cardId) {
+    changeLikeStatus(cardId, isLiked) {
         return this._sendRequest(`${this._baseUrl}/cards/likes/${cardId}`, {
-            method: 'PUT',
+            method: (isLiked ? 'PUT' : 'DELETE'),
             headers: this._headers
         })
     }
-    //удаляем лайк
-    removeLike(cardId) {
-        return this._sendRequest(`${this._baseUrl}/cards/likes/${cardId}`, {
-            method: 'DELETE',
-            headers: this._headers,
-        })
-    }
+
     //запрос массива карточек
     getInitialCards() {
         return this._sendRequest(`${this._baseUrl}/cards`, {
