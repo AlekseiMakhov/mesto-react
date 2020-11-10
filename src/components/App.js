@@ -12,6 +12,7 @@ function App() {
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = React.useState(false);
     const [selectedCard, setSelectedCard] = React.useState(false);
     const [cardData, setCardData] = React.useState({name: '', link: ''});
+    const [currentUser, setCurrentUser] = React.useState({name: '', about: '', avatar: ''});
 
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
