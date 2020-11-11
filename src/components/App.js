@@ -6,6 +6,7 @@ import AddPlacePopup from './AddPlacePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import EditProfilePopup from './EditProfilePopup';
 import PopupWithImage from './PopupWithImage';
+import PopupWithSubmit from './PopupWithSubmit';
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
 import { ValidationContext } from '../contexts/ValidationContext'
 import api from '../utils/Api';
@@ -15,11 +16,13 @@ function App() {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
     const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
+    const [isPopupWithSubmitOpen, setIsPopupWithSubmitOpen] = useState(false);
     const [selectedCard, setSelectedCard] = useState(false);
     const [cardData, setCardData] = useState({name: '', link: ''});
+    const [card, setCard] = useState({});
     const [cards, setCards] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
-    const [validationContext, setvalidationContext] = useState({ validation: [true, true], validationText: ['',''], isValid: false});
+    const [validationContext, setvalidationContext] = useState({ validation: [], validationText: [], isValid: false});
 
     let resValid = false;
 
@@ -46,26 +49,36 @@ function App() {
 
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
+        setvalidationContext({ validation: [true], validationText: [''], isValid: false});
         document.addEventListener('keydown', handleEscButton);
     }
 
     function handleEditProfileClick() {
         setIsEditProfilePopupOpen(true);
+        setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: true});
         document.addEventListener('keydown', handleEscButton);
     }
 
     function handleAddPlaceClick() {
         setIsAddPlacePopupOpen(true);
+        setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: false});
         document.addEventListener('keydown', handleEscButton);
     }
 
     function noClose(e) {
-        e.stopPropagation()
+        e.stopPropagation();
     }
 
     function handleCardClick(item) {
         setSelectedCard(true);
         setCardData({name: item.name, link: item.link});
+        document.addEventListener('keydown', handleEscButton);
+    }
+
+    function handleDeleteCardClick(card) {
+        setIsPopupWithSubmitOpen(true);
+        setvalidationContext({ validation: [], validationText: [], isValid: true});
+        setCard(card);
         document.addEventListener('keydown', handleEscButton);
     }
 
@@ -84,22 +97,29 @@ function App() {
         });
     }, [])
 
-
     function handleCardLike(card) {
         const isLiked = card.likes.some(i => i._id === currentUser._id);
-        api.changeLikeStatus(card._id, !isLiked).then((newCard) => {
-        const newCards = cards.map((c) => c._id === card._id ? newCard : c);
-        setCards(newCards);
+        api.changeLikeStatus(card._id, !isLiked)
+        .then((newCard) => {
+            const newCards = cards.map((c) => c._id === card._id ? newCard : c);
+            setCards(newCards);
+        })
+        .catch((err) => {
+            console.log(err);
         });
     } 
 
     function handleDeleteCard(card) {
         api.deleteCard(card._id)
         .then(() => {
-        const newCards = cards.filter((c) => c._id !== card._id);
-        setCards(newCards);
+            const newCards = cards.filter((c) => c._id !== card._id);
+            setCards(newCards);
+            closeAllPopups();
+        })
+        .catch((err) => {
+            console.log(err);
         });
-    } 
+    }
 
     function handleUpdateUser(userInfo) {
         api.editProfileInfo(userInfo)
@@ -123,10 +143,10 @@ function App() {
         });
     }
 
-    function handleAddPlace(newPlace) {
-        api.createNewCard(newPlace)
-        .then((newPlace) => {
-            setCards([newPlace, ...cards]);
+    function handleAddPlace(newCard) {
+        api.createNewCard(newCard)
+        .then((newCard) => {
+            setCards([newCard, ...cards]);
             closeAllPopups();
         })
         .catch((err) => {
@@ -138,10 +158,12 @@ function App() {
         setIsEditAvatarPopupOpen(false);
         setIsEditProfilePopupOpen(false);
         setIsAddPlacePopupOpen(false);
+        setIsPopupWithSubmitOpen(false);
         setCardData({name: '', link: ''});
+        setCard({});
         setSelectedCard(false);
         document.removeEventListener('keydown', handleEscButton);
-        setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: false});
+        setvalidationContext({ validation: [], validationText: [], isValid: false});
     }
 
     return (
@@ -154,13 +176,14 @@ function App() {
                 onEditAvatar={handleEditAvatarClick} 
                 onAddPlace={handleAddPlaceClick}
                 onCardClick={handleCardClick}
-                handleCardLike={handleCardLike}
-                handleDeleteCard={handleDeleteCard}
+                onCardLike={handleCardLike}
+                onDeleteCard={handleDeleteCardClick}
                 cards={cards}
             />
 
             <Footer />
-                <ValidationContext.Provider value={validationContext}>
+            <ValidationContext.Provider value={validationContext}>
+                    
                 <EditProfilePopup 
                     isOpen={isEditProfilePopupOpen} 
                     onClose={closeAllPopups} 
@@ -185,7 +208,14 @@ function App() {
                     onInput={handleInput}
                 />
                 
-                {/* <PopupWithForm name='image' title='Вы уверены?' /> */}
+                <PopupWithSubmit  
+                    isOpen={isPopupWithSubmitOpen} 
+                    onClose={closeAllPopups}
+                    noClose={noClose}
+                    onDeleteCard={handleDeleteCard}
+                    card={card}
+                />
+
             </ValidationContext.Provider>
 
             <PopupWithImage 

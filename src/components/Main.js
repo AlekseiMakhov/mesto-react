@@ -8,8 +8,8 @@ function Main({
             onEditAvatar, 
             onAddPlace,
             onCardClick,
-            handleCardLike,
-            handleDeleteCard,
+            onCardLike,
+            onDeleteCard,
             cards }) 
     {
 
@@ -40,8 +40,8 @@ function Main({
                             key={card._id} 
                             card={card} 
                             onCardClick={onCardClick} 
-                            onLikeButtonClick={handleCardLike}
-                            onCardDeleteClick={handleDeleteCard}
+                            onLikeButtonClick={onCardLike}
+                            onCardDeleteClick={onDeleteCard}
                         />
                     )
                 })}
