@@ -7,6 +7,7 @@ import EditAvatarPopup from './EditAvatarPopup';
 import EditProfilePopup from './EditProfilePopup';
 import PopupWithImage from './PopupWithImage';
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
+import { ValidationContext } from '../contexts/ValidationContext'
 import api from '../utils/Api';
 
 function App() {
@@ -18,22 +19,54 @@ function App() {
     const [cardData, setCardData] = useState({name: '', link: ''});
     const [cards, setCards] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
+    const [validationContext, setvalidationContext] = useState({ validation: [true, true], validationText: ['',''], isValid: false});
+
+    let resValid = false;
+
+    function handleInput(e) {
+        const validArr = validationContext.validation;
+        const textArr = validationContext.validationText;
+        let index = Number(e.target.id);
+        resValid = 0;
+
+        validArr[index] = e.target.validity.valid;
+        textArr[index] = e.target.validationMessage;
+        
+        for (let i = 0; i < validArr.length; i++) {
+            resValid += Number(validArr[i]);
+        }
+        setvalidationContext({ validation: validArr, validationText: textArr, isValid: (resValid === validArr.length)})
+    }
+    
+    function handleEscButton(e) {
+        if (e.key === 'Escape') {
+            closeAllPopups();
+        }
+    }
 
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
+        document.addEventListener('keydown', handleEscButton);
     }
 
     function handleEditProfileClick() {
         setIsEditProfilePopupOpen(true);
+        document.addEventListener('keydown', handleEscButton);
     }
 
     function handleAddPlaceClick() {
         setIsAddPlacePopupOpen(true);
+        document.addEventListener('keydown', handleEscButton);
+    }
+
+    function noClose(e) {
+        e.stopPropagation()
     }
 
     function handleCardClick(item) {
         setSelectedCard(true);
         setCardData({name: item.name, link: item.link});
+        document.addEventListener('keydown', handleEscButton);
     }
 
     useEffect(() => {   
@@ -69,7 +102,6 @@ function App() {
     } 
 
     function handleUpdateUser(userInfo) {
-        console.log(userInfo)
         api.editProfileInfo(userInfo)
         .then((userInfo) => {
             setCurrentUser(userInfo);
@@ -81,7 +113,6 @@ function App() {
     }
 
     function handleUpdateAvatar(user) {
-        console.log(user.avatar);
         api.editAvatar(user.avatar)
         .then((userInfo) => {
             setCurrentUser(userInfo);
@@ -109,6 +140,8 @@ function App() {
         setIsAddPlacePopupOpen(false);
         setCardData({name: '', link: ''});
         setSelectedCard(false);
+        document.removeEventListener('keydown', handleEscButton);
+        setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: false});
     }
 
     return (
@@ -127,31 +160,39 @@ function App() {
             />
 
             <Footer />
+                <ValidationContext.Provider value={validationContext}>
+                <EditProfilePopup 
+                    isOpen={isEditProfilePopupOpen} 
+                    onClose={closeAllPopups} 
+                    onUpdateUser={handleUpdateUser} 
+                    noClose={noClose}
+                    onInput={handleInput}
+                />
 
-            <EditProfilePopup 
-                isOpen={isEditProfilePopupOpen} 
-                onClose={closeAllPopups} 
-                onUpdateUser={handleUpdateUser} 
-            />
+                <EditAvatarPopup 
+                    isOpen={isEditAvatarPopupOpen} 
+                    onClose={closeAllPopups} 
+                    onUpdateAvatar={handleUpdateAvatar} 
+                    noClose={noClose}
+                    onInput={handleInput}
+                />
 
-            <EditAvatarPopup 
-                isOpen={isEditAvatarPopupOpen} 
-                onClose={closeAllPopups} 
-                onUpdateAvatar={handleUpdateAvatar} 
-            />
-
-            <AddPlacePopup 
-                isOpen={isAddPlacePopupOpen} 
-                onClose={closeAllPopups} 
-                onAddPlace={handleAddPlace} 
-            />
-            
-            {/* <PopupWithForm name='image' title='Вы уверены?' /> */}
+                <AddPlacePopup 
+                    isOpen={isAddPlacePopupOpen} 
+                    onClose={closeAllPopups} 
+                    onAddPlace={handleAddPlace}
+                    noClose={noClose}
+                    onInput={handleInput}
+                />
+                
+                {/* <PopupWithForm name='image' title='Вы уверены?' /> */}
+            </ValidationContext.Provider>
 
             <PopupWithImage 
                 isOpen={selectedCard}
                 onClose={closeAllPopups}
                 cardData={cardData}
+                noClose={noClose}
             />
         </CurrentUserContext.Provider>
     );

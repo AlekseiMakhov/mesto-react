@@ -1,3 +1,7 @@
+import cn from 'classnames';
+import { useContext } from 'react';
+import { ValidationContext } from '../contexts/ValidationContext';
+
 function PopupWithForm({ 
                             name, 
                             title, 
@@ -5,19 +9,20 @@ function PopupWithForm({
                             isOpen,
                             onClose,
                             buttonText,
-                            onSubmit 
+                            onSubmit, 
+                            noClose
                         }) 
 {
-    const isOpenClassName = (isOpen) ? ' popup_opened' : '';
+    const validationContext = useContext(ValidationContext);
 
     return (
         <>
-            <section id="profile-info__edit" className={`popup popup_type_${name}${isOpenClassName}`}>
-                <form className="popup-form" name={name} onSubmit={onSubmit}>
+            <section className={cn(`popup popup_type_${name}`, {'popup_opened' : isOpen})} onClick={onClose}>
+                <form className="popup-form" name={name} onSubmit={onSubmit} onClick={noClose}>
                     <button type="button" name="Закрыть" className="popup-form__close-button" onClick={onClose}></button>
                     <h3 className="popup-form__title">{title}</h3>
                     {children}
-                    <button className="popup-form__submit-button">{buttonText}</button>
+                    <button className={cn("popup-form__submit-button", {"popup-form__submit-button_disabled": !validationContext.isValid})} >{buttonText}</button>
                 </form>
             </section>            
         </>
