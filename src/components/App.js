@@ -18,19 +18,20 @@ function App() {
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
     const [isPopupWithSubmitOpen, setIsPopupWithSubmitOpen] = useState(false);
     const [selectedCard, setSelectedCard] = useState(false);
-    const [cardData, setCardData] = useState({name: '', link: ''});
     const [card, setCard] = useState({});
     const [cards, setCards] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
     const [validationContext, setvalidationContext] = useState({ validation: [], validationText: [], isValid: false});
 
-    let resValid = false;
+    
 
+    //Обработка ввода (установка глобального стейта валидации) подходит для любого числа элементов
+    //Элементам, которые требуется валидировать, нужно выставить уникальные id, положительные целые числа, начиная с 0
     function handleInput(e) {
         const validArr = validationContext.validation;
         const textArr = validationContext.validationText;
         let index = Number(e.target.id);
-        resValid = 0;
+        let resValid = 0;
 
         validArr[index] = e.target.validity.valid;
         textArr[index] = e.target.validationMessage;
@@ -38,50 +39,57 @@ function App() {
         for (let i = 0; i < validArr.length; i++) {
             resValid += Number(validArr[i]);
         }
+
         setvalidationContext({ validation: validArr, validationText: textArr, isValid: (resValid === validArr.length)})
     }
-    
+    //Закрытие модальных окон по Escape
     function handleEscButton(e) {
         if (e.key === 'Escape') {
             closeAllPopups();
         }
     }
-
+    //Открытие формы редактирования аватара
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
+        //Устанавливаем параметры контекста для валидации текущей формы 
+        //validation - массив содержит число элементов = числу валидируемых элементов формы, принимает значение validity.valid
+        //validationText - массив содержит число элементов = числу валидируемых элементов формы, принимает значение validationMessage
+        //isValid - булева величина, содержит результат валидации всех полей, true - если все поля валидны
         setvalidationContext({ validation: [true], validationText: [''], isValid: false});
         document.addEventListener('keydown', handleEscButton);
     }
-
+    //Открытие формы редактирования профиля
     function handleEditProfileClick() {
         setIsEditProfilePopupOpen(true);
+        //Устанавливаем параметры контекста для валидации текущей формы
         setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: true});
         document.addEventListener('keydown', handleEscButton);
     }
-
+    //Открытие формы добавления карточки
     function handleAddPlaceClick() {
         setIsAddPlacePopupOpen(true);
+        //Устанавливаем параметры контекста для валидации текущей формы
         setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: false});
         document.addEventListener('keydown', handleEscButton);
     }
-
+    //Отмена всплытия для закрытия по клику по оверлею
     function noClose(e) {
         e.stopPropagation();
     }
-
-    function handleCardClick(item) {
+    //Клик по картинке, открытие увеличенной картинки
+    function handleCardClick(card) {
         setSelectedCard(true);
-        setCardData({name: item.name, link: item.link});
+        setCard(card);
         document.addEventListener('keydown', handleEscButton);
     }
-
+    //Нажатие на кнопку удаления, открытие окна с подтверждением
     function handleDeleteCardClick(card) {
         setIsPopupWithSubmitOpen(true);
         setvalidationContext({ validation: [], validationText: [], isValid: true});
         setCard(card);
         document.addEventListener('keydown', handleEscButton);
     }
-
+    //Чтение с сервера инфо пользователя, данных карточки
     useEffect(() => {   
         Promise.all([ 
             api.getProfileInfo(),    
@@ -96,7 +104,7 @@ function App() {
             console.log(err);
         });
     }, [])
-
+    //Убрать/поставить лайк карточке
     function handleCardLike(card) {
         const isLiked = card.likes.some(i => i._id === currentUser._id);
         api.changeLikeStatus(card._id, !isLiked)
@@ -108,7 +116,7 @@ function App() {
             console.log(err);
         });
     } 
-
+    //Удаление карточки
     function handleDeleteCard(card) {
         api.deleteCard(card._id)
         .then(() => {
@@ -120,7 +128,7 @@ function App() {
             console.log(err);
         });
     }
-
+    //Смена инфо пользователя
     function handleUpdateUser(userInfo) {
         api.editProfileInfo(userInfo)
         .then((userInfo) => {
@@ -131,7 +139,7 @@ function App() {
             console.log(err);
         });
     }
-
+    //Смена аватара
     function handleUpdateAvatar(user) {
         api.editAvatar(user.avatar)
         .then((userInfo) => {
@@ -142,7 +150,7 @@ function App() {
             console.log(err);
         });
     }
-
+    //Добавление карточки
     function handleAddPlace(newCard) {
         api.createNewCard(newCard)
         .then((newCard) => {
@@ -154,21 +162,21 @@ function App() {
         });
     }
 
+    //Закрытие модальных окон, снятие слушателя Escape
     function closeAllPopups() {
         setIsEditAvatarPopupOpen(false);
         setIsEditProfilePopupOpen(false);
         setIsAddPlacePopupOpen(false);
         setIsPopupWithSubmitOpen(false);
-        setCardData({name: '', link: ''});
-        setCard({});
         setSelectedCard(false);
-        document.removeEventListener('keydown', handleEscButton);
-        setvalidationContext({ validation: [], validationText: [], isValid: false});
+        document.removeEventListener('keydown', handleEscButton);                   
+        setvalidationContext({ validation: [], validationText: [], isValid: false}); 
+        setCard({});
     }
 
     return (
-      
-        <CurrentUserContext.Provider value={currentUser}>
+      //Оборачиваем в контекст текущего пользователя
+        <CurrentUserContext.Provider value={currentUser}> 
             <Header />
 
             <Main 
@@ -182,6 +190,8 @@ function App() {
             />
 
             <Footer />
+
+            {/* Оборачиваем в контекст стейта валидации */}
             <ValidationContext.Provider value={validationContext}>
                     
                 <EditProfilePopup 
@@ -221,7 +231,7 @@ function App() {
             <PopupWithImage 
                 isOpen={selectedCard}
                 onClose={closeAllPopups}
-                cardData={cardData}
+                card={card}
                 noClose={noClose}
             />
         </CurrentUserContext.Provider>
