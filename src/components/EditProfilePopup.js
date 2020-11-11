@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
 import PopupWithForm from './PopupWithForm';
-import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import CurrentUserContext from '../contexts/CurrentUserContext';
 import cn from 'classnames';
-import { ValidationContext } from '../contexts/ValidationContext';
+import ValidationContext from '../contexts/ValidationContext';
 
 function EditProfilePopup({ 
                             isOpen, 
@@ -49,7 +49,6 @@ function EditProfilePopup({
             }
             isOpen={isOpen}
             onClose={onClose}
-            buttonText='Сохранить'
             onSubmit={handleSubmit}
             noClose={noClose}
         />

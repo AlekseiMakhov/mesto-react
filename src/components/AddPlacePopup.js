@@ -1,7 +1,7 @@
 import { useContext, useRef } from 'react';
 import PopupWithForm from './PopupWithForm';
 import cn from 'classnames';
-import { ValidationContext } from '../contexts/ValidationContext';
+import ValidationContext from '../contexts/ValidationContext';
 
 function AddPlacePopup({   
                         isOpen, 
@@ -42,7 +42,6 @@ function AddPlacePopup({
             }
             isOpen={isOpen}
             onClose={onClose}
-            buttonText='Создать'
             onSubmit={handleSubmit}
             noClose={noClose}
     />

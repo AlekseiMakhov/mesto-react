@@ -1,6 +1,7 @@
 import cn from 'classnames';
 import { useContext } from 'react';
-import { ValidationContext } from '../contexts/ValidationContext';
+import LoadingState from '../contexts/LoadingState';
+import ValidationContext from '../contexts/ValidationContext';
 
 function PopupWithForm({ 
                             name, 
@@ -14,6 +15,7 @@ function PopupWithForm({
                         }) 
 {
     const validationContext = useContext(ValidationContext);
+    const loadingText = useContext(LoadingState);  
 
     return (
         <>
@@ -22,7 +24,7 @@ function PopupWithForm({
                     <button type="button" name="Закрыть" className="popup-form__close-button" onClick={onClose}></button>
                     <h3 className="popup-form__title">{title}</h3>
                     {children}
-                    <button className={cn("popup-form__submit-button", {"popup-form__submit-button_disabled": !validationContext.isValid})} >{buttonText}</button>
+                    <button className={cn("popup-form__submit-button", {"popup-form__submit-button_disabled": !validationContext.isValid})} >{loadingText}</button>
                 </form>
             </section>            
         </>

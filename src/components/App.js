@@ -7,8 +7,9 @@ import EditAvatarPopup from './EditAvatarPopup';
 import EditProfilePopup from './EditProfilePopup';
 import PopupWithImage from './PopupWithImage';
 import PopupWithSubmit from './PopupWithSubmit';
-import { CurrentUserContext } from '../contexts/CurrentUserContext'
-import { ValidationContext } from '../contexts/ValidationContext'
+import CurrentUserContext from '../contexts/CurrentUserContext';
+import ValidationContext from '../contexts/ValidationContext';
+import LoadingState from '../contexts/LoadingState';
 import api from '../utils/Api';
 
 function App() {
@@ -18,13 +19,12 @@ function App() {
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
     const [isPopupWithSubmitOpen, setIsPopupWithSubmitOpen] = useState(false);
     const [selectedCard, setSelectedCard] = useState(false);
+    const [loadingText, setLoadingText] = useState('');
     const [card, setCard] = useState({});
     const [cards, setCards] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
     const [validationContext, setvalidationContext] = useState({ validation: [], validationText: [], isValid: false});
-
-    
-
+  
     //Обработка ввода (установка глобального стейта валидации) подходит для любого числа элементов
     //Элементам, которые требуется валидировать, нужно выставить уникальные id, положительные целые числа, начиная с 0
     function handleInput(e) {
@@ -51,6 +51,7 @@ function App() {
     //Открытие формы редактирования аватара
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
+        setLoadingText('Изменить');
         //Устанавливаем параметры контекста для валидации текущей формы 
         //validation - массив содержит число элементов = числу валидируемых элементов формы, принимает значение validity.valid
         //validationText - массив содержит число элементов = числу валидируемых элементов формы, принимает значение validationMessage
@@ -61,6 +62,7 @@ function App() {
     //Открытие формы редактирования профиля
     function handleEditProfileClick() {
         setIsEditProfilePopupOpen(true);
+        setLoadingText('Сохранить');
         //Устанавливаем параметры контекста для валидации текущей формы
         setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: true});
         document.addEventListener('keydown', handleEscButton);
@@ -68,6 +70,7 @@ function App() {
     //Открытие формы добавления карточки
     function handleAddPlaceClick() {
         setIsAddPlacePopupOpen(true);
+        setLoadingText('Создать');
         //Устанавливаем параметры контекста для валидации текущей формы
         setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: false});
         document.addEventListener('keydown', handleEscButton);
@@ -85,6 +88,7 @@ function App() {
     //Нажатие на кнопку удаления, открытие окна с подтверждением
     function handleDeleteCardClick(card) {
         setIsPopupWithSubmitOpen(true);
+        setLoadingText('Да');
         setvalidationContext({ validation: [], validationText: [], isValid: true});
         setCard(card);
         document.addEventListener('keydown', handleEscButton);
@@ -118,6 +122,7 @@ function App() {
     } 
     //Удаление карточки
     function handleDeleteCard(card) {
+        setLoadingText('Удаление...');
         api.deleteCard(card._id)
         .then(() => {
             const newCards = cards.filter((c) => c._id !== card._id);
@@ -130,6 +135,7 @@ function App() {
     }
     //Смена инфо пользователя
     function handleUpdateUser(userInfo) {
+        setLoadingText('Сохранение...');
         api.editProfileInfo(userInfo)
         .then((userInfo) => {
             setCurrentUser(userInfo);
@@ -141,6 +147,7 @@ function App() {
     }
     //Смена аватара
     function handleUpdateAvatar(user) {
+        setLoadingText('Сохранение...');
         api.editAvatar(user.avatar)
         .then((userInfo) => {
             setCurrentUser(userInfo);
@@ -152,6 +159,7 @@ function App() {
     }
     //Добавление карточки
     function handleAddPlace(newCard) {
+        setLoadingText('Загрузка...');
         api.createNewCard(newCard)
         .then((newCard) => {
             setCards([newCard, ...cards]);
@@ -193,39 +201,39 @@ function App() {
 
             {/* Оборачиваем в контекст стейта валидации */}
             <ValidationContext.Provider value={validationContext}>
+                <LoadingState.Provider value={loadingText}>
+                    <EditProfilePopup 
+                        isOpen={isEditProfilePopupOpen} 
+                        onClose={closeAllPopups} 
+                        onUpdateUser={handleUpdateUser} 
+                        noClose={noClose}
+                        onInput={handleInput}
+                    />
+
+                    <EditAvatarPopup 
+                        isOpen={isEditAvatarPopupOpen} 
+                        onClose={closeAllPopups} 
+                        onUpdateAvatar={handleUpdateAvatar} 
+                        noClose={noClose}
+                        onInput={handleInput}
+                    />
+
+                    <AddPlacePopup 
+                        isOpen={isAddPlacePopupOpen} 
+                        onClose={closeAllPopups} 
+                        onAddPlace={handleAddPlace}
+                        noClose={noClose}
+                        onInput={handleInput}
+                    />
                     
-                <EditProfilePopup 
-                    isOpen={isEditProfilePopupOpen} 
-                    onClose={closeAllPopups} 
-                    onUpdateUser={handleUpdateUser} 
-                    noClose={noClose}
-                    onInput={handleInput}
-                />
-
-                <EditAvatarPopup 
-                    isOpen={isEditAvatarPopupOpen} 
-                    onClose={closeAllPopups} 
-                    onUpdateAvatar={handleUpdateAvatar} 
-                    noClose={noClose}
-                    onInput={handleInput}
-                />
-
-                <AddPlacePopup 
-                    isOpen={isAddPlacePopupOpen} 
-                    onClose={closeAllPopups} 
-                    onAddPlace={handleAddPlace}
-                    noClose={noClose}
-                    onInput={handleInput}
-                />
-                
-                <PopupWithSubmit  
-                    isOpen={isPopupWithSubmitOpen} 
-                    onClose={closeAllPopups}
-                    noClose={noClose}
-                    onDeleteCard={handleDeleteCard}
-                    card={card}
-                />
-
+                    <PopupWithSubmit  
+                        isOpen={isPopupWithSubmitOpen} 
+                        onClose={closeAllPopups}
+                        noClose={noClose}
+                        onDeleteCard={handleDeleteCard}
+                        card={card}
+                    />
+                </LoadingState.Provider>   
             </ValidationContext.Provider>
 
             <PopupWithImage 
