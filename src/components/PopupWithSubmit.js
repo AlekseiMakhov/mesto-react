@@ -8,7 +8,7 @@ function PopupWithSubmit({
                         onDeleteCard,
                         card
                     }) 
-    {
+    {  
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -21,7 +21,6 @@ function PopupWithSubmit({
             title='Вы уверены?' 
             isOpen={isOpen}
             onClose={onClose}
-            buttonText='Да'
             onSubmit={handleSubmit}
             noClose={noClose}
         />

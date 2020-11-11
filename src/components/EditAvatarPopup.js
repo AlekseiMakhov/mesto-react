@@ -1,7 +1,7 @@
 import cn from 'classnames';
 
 import { useContext, useRef } from 'react';
-import { ValidationContext } from '../contexts/ValidationContext';
+import ValidationContext from '../contexts/ValidationContext';
 import PopupWithForm from './PopupWithForm';
 
 function EditAvatarPopup({ 
@@ -39,7 +39,6 @@ function EditAvatarPopup({
             }
             isOpen={isOpen}
             onClose={onClose}
-            buttonText='Сохранить'
             onSubmit={handleSubmit}
             noClose={noClose}
         />
