@@ -1,23 +1,31 @@
-import { useRef } from 'react';
+import cn from 'classnames';
+
+import { useContext, useRef } from 'react';
+import { ValidationContext } from '../contexts/ValidationContext';
 import PopupWithForm from './PopupWithForm';
 
 function EditAvatarPopup({ 
                         isOpen, 
                         onClose, 
-                        onUpdateAvatar 
+                        onUpdateAvatar,
+                        noClose,
+                        onInput,
                     }) 
     {
+    
+    const validationContext = useContext(ValidationContext);
 
     const avatar = useRef('');
 
     function handleSubmit(e) {
         e.preventDefault();
-        
-        onUpdateAvatar({
-            avatar: avatar.current.value
-        });
-        console.log(avatar.current.value)
-      } 
+        if (validationContext.isValid) {
+            onUpdateAvatar({
+                avatar: avatar.current.value
+            });
+            e.target.reset();
+        }    
+    } 
 
     return (
         <PopupWithForm 
@@ -25,14 +33,15 @@ function EditAvatarPopup({
             title='Обновить аватар' 
             children={
                 <>
-                    <input name="avatar" ref={avatar} id="avatar" type="url" className="popup-form__text-input" placeholder="Ссылка на картинку" required />
-                    <span id="avatar-error" className="popup-form__error-text"></span>
+                    <input onInput={onInput} name="avatar" ref={avatar} id="0" type="url" className={cn("popup-form__text-input", {"popup-form__text-input_type_error": !validationContext.validation[0]})} placeholder="Ссылка на картинку" required />
+                    <span id="avatar-error" className={cn("popup-form__error-text", {"popup-form__error-text_show": !validationContext.validation[0]})}>{validationContext.validationText[0]}</span>
                 </>
             }
             isOpen={isOpen}
             onClose={onClose}
             buttonText='Сохранить'
             onSubmit={handleSubmit}
+            noClose={noClose}
         />
     );
 }    

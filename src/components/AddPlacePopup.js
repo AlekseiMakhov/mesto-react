@@ -1,24 +1,32 @@
-import { useRef } from 'react';
+import { useContext, useRef } from 'react';
 import PopupWithForm from './PopupWithForm';
+import cn from 'classnames';
+import { ValidationContext } from '../contexts/ValidationContext';
 
 function AddPlacePopup({   
                         isOpen, 
                         onClose, 
-                        onAddPlace 
+                        onAddPlace,
+                        noClose,
+                        onInput,
                         }) 
     {
+
+    const validationContext = useContext(ValidationContext);    
 
     const link = useRef('');
     const name = useRef('');
 
     function handleSubmit(e) {
         e.preventDefault();
-      
-        onAddPlace({
-          link: link.current.value,
-          name: name.current.value
-        });
-      } 
+        if (validationContext.isValid) {
+            onAddPlace({
+                link: link.current.value,
+                name: name.current.value
+            });
+            e.target.reset();
+        }    
+    } 
 
     return (
         <PopupWithForm 
@@ -26,16 +34,17 @@ function AddPlacePopup({
             title='Новое место' 
             children={
                 <>
-                    <input ref={name} name="name" id="image-input" type="text" minLength="1" maxLength="40" className="popup-form__text-input" placeholder="Название" required />
-                    <span id="image-input-error" className="popup-form__error-text"></span>
-                    <input ref={link} name="link" id="link-input" type="url" className="popup-form__text-input" placeholder="Ссылка на картинку" required />
-                    <span id="link-input-error" className="popup-form__error-text"></span>
+                    <input onInput={onInput} ref={name} name="name" id="0" type="text" minLength="1" maxLength="40" className={cn("popup-form__text-input", {"popup-form__text-input_type_error": !validationContext.validation[0]})} placeholder="Название" required />
+                    <span id="image-input-error" className={cn("popup-form__error-text", {"popup-form__error-text_show": !validationContext.validation[0]})}>{validationContext.validationText[0]}</span>
+                    <input onInput={onInput} ref={link} name="link" id="1" type="url" className={cn("popup-form__text-input", {"popup-form__text-input_type_error": !validationContext.validation[1]})} placeholder="Ссылка на картинку" required />
+                    <span id="link-input-error" className={cn("popup-form__error-text", {"popup-form__error-text_show": !validationContext.validation[1]})}>{validationContext.validationText[1]}</span>
                 </>
             }
             isOpen={isOpen}
             onClose={onClose}
             buttonText='Создать'
             onSubmit={handleSubmit}
+            noClose={noClose}
     />
     );
 }    

@@ -6,7 +6,9 @@ import AddPlacePopup from './AddPlacePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import EditProfilePopup from './EditProfilePopup';
 import PopupWithImage from './PopupWithImage';
+import PopupWithSubmit from './PopupWithSubmit';
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
+import { ValidationContext } from '../contexts/ValidationContext'
 import api from '../utils/Api';
 
 function App() {
@@ -14,28 +16,80 @@ function App() {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
     const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
+    const [isPopupWithSubmitOpen, setIsPopupWithSubmitOpen] = useState(false);
     const [selectedCard, setSelectedCard] = useState(false);
-    const [cardData, setCardData] = useState({name: '', link: ''});
+    const [card, setCard] = useState({});
     const [cards, setCards] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
+    const [validationContext, setvalidationContext] = useState({ validation: [], validationText: [], isValid: false});
 
+    
+
+    //Обработка ввода (установка глобального стейта валидации) подходит для любого числа элементов
+    //Элементам, которые требуется валидировать, нужно выставить уникальные id, положительные целые числа, начиная с 0
+    function handleInput(e) {
+        const validArr = validationContext.validation;
+        const textArr = validationContext.validationText;
+        let index = Number(e.target.id);
+        let resValid = 0;
+
+        validArr[index] = e.target.validity.valid;
+        textArr[index] = e.target.validationMessage;
+        
+        for (let i = 0; i < validArr.length; i++) {
+            resValid += Number(validArr[i]);
+        }
+
+        setvalidationContext({ validation: validArr, validationText: textArr, isValid: (resValid === validArr.length)})
+    }
+    //Закрытие модальных окон по Escape
+    function handleEscButton(e) {
+        if (e.key === 'Escape') {
+            closeAllPopups();
+        }
+    }
+    //Открытие формы редактирования аватара
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
+        //Устанавливаем параметры контекста для валидации текущей формы 
+        //validation - массив содержит число элементов = числу валидируемых элементов формы, принимает значение validity.valid
+        //validationText - массив содержит число элементов = числу валидируемых элементов формы, принимает значение validationMessage
+        //isValid - булева величина, содержит результат валидации всех полей, true - если все поля валидны
+        setvalidationContext({ validation: [true], validationText: [''], isValid: false});
+        document.addEventListener('keydown', handleEscButton);
     }
-
+    //Открытие формы редактирования профиля
     function handleEditProfileClick() {
         setIsEditProfilePopupOpen(true);
+        //Устанавливаем параметры контекста для валидации текущей формы
+        setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: true});
+        document.addEventListener('keydown', handleEscButton);
     }
-
+    //Открытие формы добавления карточки
     function handleAddPlaceClick() {
         setIsAddPlacePopupOpen(true);
+        //Устанавливаем параметры контекста для валидации текущей формы
+        setvalidationContext({ validation: [true, true], validationText: ['',''], isValid: false});
+        document.addEventListener('keydown', handleEscButton);
     }
-
-    function handleCardClick(item) {
+    //Отмена всплытия для закрытия по клику по оверлею
+    function noClose(e) {
+        e.stopPropagation();
+    }
+    //Клик по картинке, открытие увеличенной картинки
+    function handleCardClick(card) {
         setSelectedCard(true);
-        setCardData({name: item.name, link: item.link});
+        setCard(card);
+        document.addEventListener('keydown', handleEscButton);
     }
-
+    //Нажатие на кнопку удаления, открытие окна с подтверждением
+    function handleDeleteCardClick(card) {
+        setIsPopupWithSubmitOpen(true);
+        setvalidationContext({ validation: [], validationText: [], isValid: true});
+        setCard(card);
+        document.addEventListener('keydown', handleEscButton);
+    }
+    //Чтение с сервера инфо пользователя, данных карточки
     useEffect(() => {   
         Promise.all([ 
             api.getProfileInfo(),    
@@ -50,24 +104,31 @@ function App() {
             console.log(err);
         });
     }, [])
-
-
+    //Убрать/поставить лайк карточке
     function handleCardLike(card) {
         const isLiked = card.likes.some(i => i._id === currentUser._id);
-        api.changeLikeStatus(card._id, !isLiked).then((newCard) => {
-        const newCards = cards.map((c) => c._id === card._id ? newCard : c);
-        setCards(newCards);
+        api.changeLikeStatus(card._id, !isLiked)
+        .then((newCard) => {
+            const newCards = cards.map((c) => c._id === card._id ? newCard : c);
+            setCards(newCards);
+        })
+        .catch((err) => {
+            console.log(err);
         });
     } 
-
+    //Удаление карточки
     function handleDeleteCard(card) {
         api.deleteCard(card._id)
         .then(() => {
-        const newCards = cards.filter((c) => c._id !== card._id);
-        setCards(newCards);
+            const newCards = cards.filter((c) => c._id !== card._id);
+            setCards(newCards);
+            closeAllPopups();
+        })
+        .catch((err) => {
+            console.log(err);
         });
-    } 
-
+    }
+    //Смена инфо пользователя
     function handleUpdateUser(userInfo) {
         api.editProfileInfo(userInfo)
         .then((userInfo) => {
@@ -78,9 +139,8 @@ function App() {
             console.log(err);
         });
     }
-
+    //Смена аватара
     function handleUpdateAvatar(user) {
-        console.log(user.avatar);
         api.editAvatar(user.avatar)
         .then((userInfo) => {
             setCurrentUser(userInfo);
@@ -90,11 +150,11 @@ function App() {
             console.log(err);
         });
     }
-
-    function handleAddPlace(newPlace) {
-        api.createNewCard(newPlace)
-        .then((newPlace) => {
-            setCards([newPlace, ...cards]);
+    //Добавление карточки
+    function handleAddPlace(newCard) {
+        api.createNewCard(newCard)
+        .then((newCard) => {
+            setCards([newCard, ...cards]);
             closeAllPopups();
         })
         .catch((err) => {
@@ -102,17 +162,21 @@ function App() {
         });
     }
 
+    //Закрытие модальных окон, снятие слушателя Escape
     function closeAllPopups() {
         setIsEditAvatarPopupOpen(false);
         setIsEditProfilePopupOpen(false);
         setIsAddPlacePopupOpen(false);
-        setCardData({name: '', link: ''});
+        setIsPopupWithSubmitOpen(false);
         setSelectedCard(false);
+        document.removeEventListener('keydown', handleEscButton);                   
+        setvalidationContext({ validation: [], validationText: [], isValid: false}); 
+        setCard({});
     }
 
     return (
-      
-        <CurrentUserContext.Provider value={currentUser}>
+      //Оборачиваем в контекст текущего пользователя
+        <CurrentUserContext.Provider value={currentUser}> 
             <Header />
 
             <Main 
@@ -120,37 +184,55 @@ function App() {
                 onEditAvatar={handleEditAvatarClick} 
                 onAddPlace={handleAddPlaceClick}
                 onCardClick={handleCardClick}
-                handleCardLike={handleCardLike}
-                handleDeleteCard={handleDeleteCard}
+                onCardLike={handleCardLike}
+                onDeleteCard={handleDeleteCardClick}
                 cards={cards}
             />
 
             <Footer />
 
-            <EditProfilePopup 
-                isOpen={isEditProfilePopupOpen} 
-                onClose={closeAllPopups} 
-                onUpdateUser={handleUpdateUser} 
-            />
+            {/* Оборачиваем в контекст стейта валидации */}
+            <ValidationContext.Provider value={validationContext}>
+                    
+                <EditProfilePopup 
+                    isOpen={isEditProfilePopupOpen} 
+                    onClose={closeAllPopups} 
+                    onUpdateUser={handleUpdateUser} 
+                    noClose={noClose}
+                    onInput={handleInput}
+                />
 
-            <EditAvatarPopup 
-                isOpen={isEditAvatarPopupOpen} 
-                onClose={closeAllPopups} 
-                onUpdateAvatar={handleUpdateAvatar} 
-            />
+                <EditAvatarPopup 
+                    isOpen={isEditAvatarPopupOpen} 
+                    onClose={closeAllPopups} 
+                    onUpdateAvatar={handleUpdateAvatar} 
+                    noClose={noClose}
+                    onInput={handleInput}
+                />
 
-            <AddPlacePopup 
-                isOpen={isAddPlacePopupOpen} 
-                onClose={closeAllPopups} 
-                onAddPlace={handleAddPlace} 
-            />
-            
-            {/* <PopupWithForm name='image' title='Вы уверены?' /> */}
+                <AddPlacePopup 
+                    isOpen={isAddPlacePopupOpen} 
+                    onClose={closeAllPopups} 
+                    onAddPlace={handleAddPlace}
+                    noClose={noClose}
+                    onInput={handleInput}
+                />
+                
+                <PopupWithSubmit  
+                    isOpen={isPopupWithSubmitOpen} 
+                    onClose={closeAllPopups}
+                    noClose={noClose}
+                    onDeleteCard={handleDeleteCard}
+                    card={card}
+                />
+
+            </ValidationContext.Provider>
 
             <PopupWithImage 
                 isOpen={selectedCard}
                 onClose={closeAllPopups}
-                cardData={cardData}
+                card={card}
+                noClose={noClose}
             />
         </CurrentUserContext.Provider>
     );
