@@ -9,7 +9,6 @@ function PopupWithForm({
                             children,
                             isOpen,
                             onClose,
-                            buttonText,
                             onSubmit, 
                             noClose
                         }) 

@@ -1,6 +1,6 @@
 import cn from 'classnames';
 
-import { useContext, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import ValidationContext from '../contexts/ValidationContext';
 import PopupWithForm from './PopupWithForm';
 
@@ -23,9 +23,12 @@ function EditAvatarPopup({
             onUpdateAvatar({
                 avatar: avatar.current.value
             });
-            e.target.reset();
         }    
     } 
+
+    useEffect(_=> {
+        !isOpen && avatar.current.parentElement.reset();
+    }, [isOpen]);
 
     return (
         <PopupWithForm 

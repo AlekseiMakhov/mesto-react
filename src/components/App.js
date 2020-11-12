@@ -30,7 +30,7 @@ function App() {
     function handleInput(e) {
         const validArr = validationContext.validation;
         const textArr = validationContext.validationText;
-        let index = Number(e.target.id);
+        const index = Number(e.target.id);
         let resValid = 0;
 
         validArr[index] = e.target.validity.valid;

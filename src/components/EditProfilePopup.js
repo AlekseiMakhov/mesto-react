@@ -31,7 +31,6 @@ function EditProfilePopup({
                 name,
                 about
             });
-            e.target.reset();
         }    
     }
 

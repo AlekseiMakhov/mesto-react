@@ -1,4 +1,4 @@
-import { useContext, useRef } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import PopupWithForm from './PopupWithForm';
 import cn from 'classnames';
 import ValidationContext from '../contexts/ValidationContext';
@@ -12,7 +12,7 @@ function AddPlacePopup({
                         }) 
     {
 
-    const validationContext = useContext(ValidationContext);    
+    const validationContext = useContext(ValidationContext); 
 
     const link = useRef('');
     const name = useRef('');
@@ -24,9 +24,12 @@ function AddPlacePopup({
                 link: link.current.value,
                 name: name.current.value
             });
-            e.target.reset();
         }    
-    } 
+    }
+
+    useEffect(_=> {
+        !isOpen && link.current.parentElement.reset();
+    }, [isOpen]);
 
     return (
         <PopupWithForm 
